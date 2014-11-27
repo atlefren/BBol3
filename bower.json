@@ -1,10 +1,10 @@
 {
-  "name": "bwmaplib",
+  "name": "bbol3",
   "version": "0.1.1",
   "authors": [
     "Atle Frenvik Sveen <atle.sveen@gmail.com>"
   ],
-  "description": "Kartfunkjsonalitet for BW",
+  "description": "Backbone and ol3 integration",
   "main": "dist/kartkjerne.js",
   "license": "BSD",
   "ignore": [
@@ -19,9 +19,7 @@
     "sonar-project.properties"
   ],
   "dependencies": {
-    "openlayers3": "~3.0.0",
     "jquery": "~2.1.1",
-    "backbone": "~1.1.2",
-    "proj4": "~2.3.3"
+    "backbone": "~1.1.2"
   }
 }

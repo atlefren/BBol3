@@ -1,12 +1,12 @@
 {
-  "name": "bwmaplib",
+  "name": "bbol3",
   "license": "BSD",
   "version": "0.1.1",
-  "description": "Kartfunkjsonalitet for BW",
-  "main": "dist/kartkjerne.js",
+  "description": "Backbone and ol3 integration",
+  "main": "dist/noe.js",
   "repository": {
     "type": "git",
-    "url": "git//:code.barentswatch.net/stash/projects/BW/repos/maplib.git"
+    "url": "git://github.com/atlefren/maplib.git"
   },
   "devDependencies": {
     "grunt": "~0.4.5",

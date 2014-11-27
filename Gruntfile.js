@@ -6,36 +6,6 @@ module.exports = function(grunt) {
             options: {
                 separator: '\n'
             },
-            core: {
-                src: [
-                    'src/mapcore.js'
-                ],
-                dest: 'dist/kartkjerne.js'
-            },
-            circlecontrol: {
-              src: [
-                    'src/CircleDraw.js'
-                ],
-                dest: 'dist/circledraw.js'
-            },
-            wfslayer: {
-              src: [
-                    'src/WfsLayer.js'
-                ],
-                dest: 'dist/wfslayer.js'
-            },
-            clusterstyle: {
-              src: [
-                    'src/ClusterStyle.js'
-                ],
-                dest: 'dist/clusterstyle.js'
-            },
-            wmshttpsproxy: {
-              src: [
-                    'src/WmsHttpsProxy.js'
-                ],
-                dest: 'dist/wmshttpsproxy.js'
-            },
             ol3core: {
               src: [
                     'src/BW.Facade/BW.Facade.JSONConfigFacade.js',
@@ -78,31 +48,6 @@ module.exports = function(grunt) {
             options: {
                 sourceMap: true,
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy HH:MM") %> */\n'
-            },
-            dist: {
-                files: {
-                    'dist/kartkjerne.min.js': ['<%= concat.core.dest %>']
-                }
-            },
-            circlecontrol: {
-                files: {
-                    'dist/circledraw.min.js': ['<%= concat.circlecontrol.dest %>']
-                }
-            },
-            wfslayer: {
-                files: {
-                    'dist/wfslayer.min.js': ['<%= concat.wfslayer.dest %>']
-                }
-            },
-            clusterstyle: {
-                files: {
-                    'dist/clusterstyle.min.js': ['<%= concat.clusterstyle.dest %>']
-                }
-            },
-            wmshttpsproxy: {
-                files: {
-                    'dist/wmshttpsproxy.min.js': ['<%= concat.wmshttpsproxy.dest %>']
-                }
             },
             ol3core: {
                 files: {
