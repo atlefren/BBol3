@@ -10,20 +10,10 @@ BW.MapCore = BW.MapCore || {};
     'use strict';
 
     ns.setupMap = function (mapDiv, mapConfig, callback) {
-
-        //load config from json-
-        var facade = new BW.Facade.JSONConfigFacade();
-        //manual dependency-injection
-        var eventHandler = new BW.Events.EventHandler();
-        var repo =  new BW.Repository.ConfigRepository(facade);
-        var map = new BW.Map.OL3Map(repo, eventHandler);
-        var mapModel = new BW.MapModel.Map(map, repo, eventHandler);
-
+        var mapModel = new BW.MapModel.Map(map);
         function initMap(data) {
             mapModel.Init(mapDiv, data, callback);
         }
-
-        //lag kartet
-        repo.GetMapConfig(mapConfig, initMap);
+        BW.Repository.getConfig(mapConfig, initMap);
     };
 }(BW.MapCore));

@@ -1,28 +1,25 @@
-var BW = BW || {};
+var BW = this.BW || {};
 BW.MapModel = BW.MapModel || {};
 
-BW.MapModel.Layer = function(config){
+BW.MapModel.Layer = function (config) {
+    'use strict';
     var defaults = {
         subLayers: [],
         name: '',
         categoryId: 0,
         visibleOnLoad: true,
         isVisible: false, // Holds current state, will be set to true on factory.Init if VisibleOnLoad = true
-        id: new BW.Utils.Guid().newGuid(),
         isBaseLayer: false,
         previewActive: false,
         opacity: 1,
         mapLayerIndex: -1,
-        legendGraphicUrls: [],
-        selectedLayerOpen: false //todo johben temp
+        legendGraphicUrls: []
     };
     var layerInstance = $.extend({}, defaults, config); // layerInstance
 
-    var subLayers = [];
-    for(var i = 0; i < config.subLayers.length; i++){
-        subLayers.push(new BW.MapModel.SubLayer(config.subLayers[i]));
-    }
-
+    var subLayers = _.map(config.subLayers, function (subLayer) {
+        return new BW.MapModel.SubLayer(subLayer);
+    });
     layerInstance.subLayers = subLayers;
 
     return layerInstance;
