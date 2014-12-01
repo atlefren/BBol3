@@ -1,61 +1,238 @@
-var BW = this.BW || {};
-BW.Repository = BW.Repository || {};
+/*global ol:false */
+var bbol3 = this.bbol3 || {};
 
 (function (ns) {
     'use strict';
 
-    function _createConfig(config) {
-        var result = {
-            numZoomLevels: 18,
-            newMaxRes: 21664.0,
-            center: [-20617, 7661666],
-            zoom:  4,
-            extent: [-2500000.0, 3500000.0, 3045984.0, 9045984.0],
-            layers: [],
-            tools: []
-        };
-        _.extend(result, config);
-        var layers = _.map(config.layers, function (layer) {
-            return new BW.MapModel.Layer(layer);
-        });
-        result.layers = layers;
-        return result;
-    }
+    ns.ConfigParser = function () {
 
-    var MapConfig = function (config) {
-        var defaults = {
-            numZoomLevels: 10,
-            newMaxRes: 20000,
-            renderer: 'canvas',
-            center: [-1, 1],
-            zoom: 5,
-            layers: [],
-            coordinate_system: "EPSG:32633",
-            extent: [-1, -1, -1, -1],
-            extentunits: 'm',
-            proxyHost: ""
-        };
-        return _.extend({}, defaults, config);
-    };
+        var map;
+        var config;
+        var mapElement;
+        var createdCallback;
 
-    ns.getConfig = function (url, callback) {
-
-        function parse(data) {
-            var mapConfig = new MapConfig(_createConfig(data));
-            callback(mapConfig);
+        function getFromConfigOrMapConfig(givenConfig, attr) {
+            if (_.has(givenConfig, attr)) {
+                return givenConfig[attr];
+            }
+            return config[attr];
         }
 
-        try {
-            if (_.isString(url)) {
-                parse(JSON.parse(url));
-            } else {
-                parse(url);
-            }
-        } catch (e) {
-            $.getJSON(url, function (data) {
-                parse(data);
+        function createProjection(config) {
+            return new ol.proj.Projection({
+                code: getFromConfigOrMapConfig(config, 'srid'),
+                extent: getFromConfigOrMapConfig(config, 'extent'),
+                units: getFromConfigOrMapConfig(config, 'extentUnits')
             });
         }
+
+        function createWmsLayer(layerConfig) {
+            var sourceData = {
+                params: {
+                    LAYERS: layerConfig.layername,
+                    VERSION: layerConfig.version
+                },
+                url: layerConfig.url,
+                format: layerConfig.format,
+                crossOrigin: 'anonymous',
+                transparent: layerConfig.transparent
+            };
+
+            var source;
+            if (layerConfig.tiled) {
+                source = new ol.source.TileWMS(sourceData);
+            } else {
+                source = new ol.source.ImageWMS(sourceData);
+            }
+
+            var layerData = {
+                extent: getFromConfigOrMapConfig(layerConfig, 'extent'),
+                source: source
+            };
+            if (layerConfig.tiled) {
+                return new ol.layer.Tile(layerData);
+            }
+            return new ol.layer.Image(layerData);
+        }
+
+        function extendWmsConfigWithDefaults(wmsConfig) {
+            var defaults = {
+                format: 'image/png',
+                transparent: true,
+                version: '1.1.1'
+            };
+            if (!_.has(wmsConfig, 'tiled')) {
+                wmsConfig.tiled = true;
+            }
+            return _.extend({}, wmsConfig, defaults);
+        }
+
+        function createWmtsLayer(layerConfig) {
+            function createMatrixIds(numZoomLevels, projection) {
+                var code = projection.getCode();
+                return _.map(_.range(numZoomLevels), function (i) {
+                    return code + ':' + i;
+                });
+            }
+
+            function createResolutions(numZoomLevels, projection) {
+                var size = ol.extent.getWidth(projection.getExtent()) / 256;
+                return _.map(_.range(numZoomLevels), function (i) {
+                    return size / Math.pow(2, i);
+                });
+            }
+
+            var projection = createProjection(layerConfig);
+
+            var projectionExtent = projection.getExtent();
+            var numZoomLevels = config.numZoomLevels;
+            var resolutions = createResolutions(numZoomLevels, projection);
+            var matrixIds = createMatrixIds(numZoomLevels, projection);
+
+            var source = new ol.source.WMTS({
+                url: layerConfig.url,
+                layer: layerConfig.layername,
+                format: layerConfig.format,
+                projection: projection,
+                matrixSet: getFromConfigOrMapConfig(layerConfig, 'srid'),
+                crossOrigin: 'anonymous',
+                tileGrid: new ol.tilegrid.WMTS({
+                    origin: ol.extent.getTopLeft(projectionExtent),
+                    resolutions: resolutions,
+                    matrixIds: matrixIds
+                })
+            });
+
+            return new ol.layer.Tile({
+                extent: getFromConfigOrMapConfig(layerConfig, 'extent'),
+                source: source
+            });
+        }
+
+        function extendWmtsConfigWithDefaults(wmtsConfig) {
+            var defaults = {
+                format: 'image/png'
+            };
+            return _.extend({}, wmtsConfig, defaults);
+        }
+
+        function createLayer(layerConfig) {
+            switch (layerConfig.source) {
+            case 'WMTS':
+                return createWmtsLayer(
+                    extendWmtsConfigWithDefaults(layerConfig)
+                );
+            case 'WMS':
+                return createWmsLayer(
+                    extendWmsConfigWithDefaults(layerConfig)
+                );
+            default:
+                throw 'Unsupported source';
+            }
+        }
+
+        function addBaseLayer(layer) {
+            map.getLayers().insertAt(0, layer);
+        }
+
+        function addOverlay(layer) {
+            map.addLayer(layer);
+        }
+
+        function createResolutions(config) {
+            var newMapRes = [];
+            newMapRes[0] = config.maxResolution;
+            var t;
+            for (t = 1; t < config.numZoomLevels; t++) {
+                newMapRes[t] = newMapRes[t - 1] / 2;
+            }
+            return newMapRes;
+        }
+
+        function createLayers(config) {
+            var baseLayers = _.chain(config.layers)
+                .filter(function (layer) {
+                    return layer.isBaseLayer;
+                })
+                .map(createLayer)
+                .value();
+            var overlays = _.chain(config.layers)
+                .filter(function (layer) {
+                    return !layer.isBaseLayer;
+                })
+                .map(createLayer)
+                .value();
+            return {
+                baseLayers: baseLayers,
+                overlays: overlays
+            };
+        }
+
+        function extendMapConfigWithDefaults(mapConfig) {
+            var defaults = {
+                numZoomLevels: 18,
+                maxResolution: 21664.0,
+                extent: [-2500000.0, 3500000.0, 3045984.0, 9045984.0],
+                center: [-20617, 7661666],
+                zoom: 2,
+                "srid": "EPSG:32633",
+                "extentUnits": "m",
+            };
+
+            return _.extend({}, mapConfig, defaults);
+        }
+
+        function init(mapConfig) {
+            config = extendMapConfigWithDefaults(mapConfig);
+            var resolutions = createResolutions(config);
+            var projection = createProjection(config);
+            map = new ol.Map({
+                target: mapElement,
+                renderer: mapConfig.renderer,
+                layers: [],
+                view: new ol.View({
+                    projection: projection,
+                    center: config.center,
+                    zoom: config.zoom,
+                    resolutions: resolutions,
+                    maxResolution: config.maxResolution,
+                    numZoomLevels: config.numZoomLevels
+                }),
+                overlays: []
+            });
+
+            var layers = createLayers(config);
+            _.each(layers.baseLayers, addBaseLayer);
+            _.each(layers.overlays, addOverlay);
+
+            if (createdCallback) {
+                createdCallback(map);
+            }
+        }
+
+        function getConfig(url, callback) {
+            try {
+                if (_.isString(url)) {
+                    callback(JSON.parse(url));
+                } else {
+                    callback(url);
+                }
+            } catch (e) {
+                $.getJSON(url, function (data) {
+                    callback(data);
+                });
+            }
+        }
+
+        function setupMap(mapConfig, element, callback) {
+            mapElement = element;
+            createdCallback = callback;
+            getConfig(mapConfig, init);
+        }
+
+        return {
+            setupMap: setupMap
+        };
     };
 
-}(BW.Repository));
+}(bbol3));

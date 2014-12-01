@@ -1,401 +1,238 @@
-var BW = this.BW || {};
-BW.MapModel = BW.MapModel || {};
-
-BW.MapModel.Layer = function (config) {
-    'use strict';
-    var defaults = {
-        subLayers: [],
-        name: '',
-        categoryId: 0,
-        visibleOnLoad: true,
-        isVisible: false, // Holds current state, will be set to true on factory.Init if VisibleOnLoad = true
-        isBaseLayer: false,
-        previewActive: false,
-        opacity: 1,
-        mapLayerIndex: -1,
-        legendGraphicUrls: []
-    };
-    var layerInstance = $.extend({}, defaults, config); // layerInstance
-
-    var subLayers = _.map(config.subLayers, function (subLayer) {
-        return new BW.MapModel.SubLayer(subLayer);
-    });
-    layerInstance.subLayers = subLayers;
-
-    return layerInstance;
-};
 /*global ol:false */
-var BW = this.BW || {};
-BW.MapModel = BW.MapModel || {};
+var bbol3 = this.bbol3 || {};
 
-BW.MapModel.Map = function () {
+(function (ns) {
+    'use strict';
 
-    var map;
-    var layers;
-    var config;
-    var proxyHost;
+    ns.ConfigParser = function () {
 
-    function _getLayers() {
-        if (config !== undefined) {
-            return config.layers;
-        }
-        return [];
-    }
+        var map;
+        var config;
+        var mapElement;
+        var createdCallback;
 
-    function getBaseLayers() {
-        return _getLayers().filter(function (elem) {
-            return elem.isBaseLayer === true;
-        });
-    }
-
-    function getOverlayLayers() {
-        return _getLayers().filter(function (elem) {
-            return elem.isBaseLayer === false;
-        });
-    }
-
-    function _setUpLayerIndex() {
-        var layerIndex = 0;
-
-        var baseLayers = getBaseLayers();
-        var i, j, baseLayer;
-        for (i = 0; i < baseLayers.length; i++) {
-            baseLayer = baseLayers[i];
-            for (j = 0; j < baseLayer.subLayers.length; j++) {
-                baseLayer.subLayers[j].layerIndex = layerIndex;
-                layerIndex++;
+        function getFromConfigOrMapConfig(givenConfig, attr) {
+            if (_.has(givenConfig, attr)) {
+                return givenConfig[attr];
             }
+            return config[attr];
         }
 
-        var overlayLayers = getOverlayLayers();
-        var k, l, overlayLayer;
-        for (k = 0; k < overlayLayers.length; k++) {
-            overlayLayer = overlayLayers[k];
-            for (l = 0; l < overlayLayer.subLayers.length; l++) {
-                overlayLayer.subLayers[l].layerIndex = layerIndex;
-                layerIndex++;
-            }
-        }
-    }
-
-    function initMap(targetId, mapConfig, callback) {
-        proxyHost = mapConfig.proxyHost;
-        var numZoomLevels = mapConfig.numZoomLevels;
-        var newMapRes = [];
-        newMapRes[0] = mapConfig.newMaxRes;
-        var t;
-        for (t = 1; t < numZoomLevels; t++) {
-            newMapRes[t] = newMapRes[t - 1] / 2;
-        }
-        var sm = new ol.proj.Projection({
-            code: mapConfig.coordinate_system,
-            extent: mapConfig.extent,
-            units: mapConfig.extentUnits
-        });
-
-        map = new ol.Map({
-            target: targetId,
-            renderer: mapConfig.renderer,
-            layers: [],
-            view: new ol.View({
-                projection: sm,
-                center: mapConfig.center,
-                zoom: mapConfig.zoom,
-                resolutions: newMapRes,
-                maxResolution: mapConfig.newMaxRes,
-                numZoomLevels: numZoomLevels
-            }),
-            controls: [],
-            overlays: []
-        });
-
-        if (callback) {
-            callback(map);
-        }
-    }
-
-    function _getVisibleBaseLayers() {
-        return getBaseLayers().filter(function (elem) {
-            return elem.isVisible === true;
-        });
-    }
-
-    function _createLayer(bwSubLayer) {
-        var layer, source;
-
-        switch (bwSubLayer.source) {
-        case BW.MapModel.SubLayer.SOURCES.wmts:
-            source = new BW.MapModel.Map.WmtsSource(bwSubLayer);
-            break;
-
-        case BW.MapModel.SubLayer.SOURCES.proxyWmts:
-            bwSubLayer.url = proxyHost + bwSubLayer.url;
-            source = new BW.MapModel.Map.WmtsSource(bwSubLayer);
-            break;
-
-        case BW.MapModel.SubLayer.SOURCES.wms:
-            source = new BW.MapModel.Map.WmsSource(bwSubLayer);
-            break;
-        case BW.MapModel.SubLayer.SOURCES.proxyWms:
-            bwSubLayer.url = proxyHost + bwSubLayer.url;
-            source = new BW.MapModel.Map.WmsSource(bwSubLayer);
-            break;
-        default:
-            throw 'Unsupported source: BW.MapModel.SubLayer.SOURCES.\'' +
-                    bwSubLayer.source +
-                    '\'. For SubLayer with url ' + bwSubLayer.url +
-                    ' and name ' + bwSubLayer.name + '.';
-        }
-
-        if (bwSubLayer.tiled) {
-            layer = new ol.layer.Tile({
-                extent: bwSubLayer.extent,
-                opacity: bwSubLayer.opacity,
-                source: source
+        function createProjection(config) {
+            return new ol.proj.Projection({
+                code: getFromConfigOrMapConfig(config, 'srid'),
+                extent: getFromConfigOrMapConfig(config, 'extent'),
+                units: getFromConfigOrMapConfig(config, 'extentUnits')
             });
-        } else {
-            layer = new ol.layer.Image({
-                extent: bwSubLayer.extent,
-                opacity: bwSubLayer.opacity,
+        }
+
+        function createWmsLayer(layerConfig) {
+            var sourceData = {
+                params: {
+                    LAYERS: layerConfig.layername,
+                    VERSION: layerConfig.version
+                },
+                url: layerConfig.url,
+                format: layerConfig.format,
+                crossOrigin: 'anonymous',
+                transparent: layerConfig.transparent
+            };
+
+            var source;
+            if (layerConfig.tiled) {
+                source = new ol.source.TileWMS(sourceData);
+            } else {
+                source = new ol.source.ImageWMS(sourceData);
+            }
+
+            var layerData = {
+                extent: getFromConfigOrMapConfig(layerConfig, 'extent'),
+                source: source
+            };
+            if (layerConfig.tiled) {
+                return new ol.layer.Tile(layerData);
+            }
+            return new ol.layer.Image(layerData);
+        }
+
+        function extendWmsConfigWithDefaults(wmsConfig) {
+            var defaults = {
+                format: 'image/png',
+                transparent: true,
+                version: '1.1.1'
+            };
+            if (!_.has(wmsConfig, 'tiled')) {
+                wmsConfig.tiled = true;
+            }
+            return _.extend({}, wmsConfig, defaults);
+        }
+
+        function createWmtsLayer(layerConfig) {
+            function createMatrixIds(numZoomLevels, projection) {
+                var code = projection.getCode();
+                return _.map(_.range(numZoomLevels), function (i) {
+                    return code + ':' + i;
+                });
+            }
+
+            function createResolutions(numZoomLevels, projection) {
+                var size = ol.extent.getWidth(projection.getExtent()) / 256;
+                return _.map(_.range(numZoomLevels), function (i) {
+                    return size / Math.pow(2, i);
+                });
+            }
+
+            var projection = createProjection(layerConfig);
+
+            var projectionExtent = projection.getExtent();
+            var numZoomLevels = config.numZoomLevels;
+            var resolutions = createResolutions(numZoomLevels, projection);
+            var matrixIds = createMatrixIds(numZoomLevels, projection);
+
+            var source = new ol.source.WMTS({
+                url: layerConfig.url,
+                layer: layerConfig.layername,
+                format: layerConfig.format,
+                projection: projection,
+                matrixSet: getFromConfigOrMapConfig(layerConfig, 'srid'),
+                crossOrigin: 'anonymous',
+                tileGrid: new ol.tilegrid.WMTS({
+                    origin: ol.extent.getTopLeft(projectionExtent),
+                    resolutions: resolutions,
+                    matrixIds: matrixIds
+                })
+            });
+
+            return new ol.layer.Tile({
+                extent: getFromConfigOrMapConfig(layerConfig, 'extent'),
                 source: source
             });
         }
 
-        layer.layerIndex = bwSubLayer.layerIndex;
-        layer.guid = bwSubLayer.id;
+        function extendWmtsConfigWithDefaults(wmtsConfig) {
+            var defaults = {
+                format: 'image/png'
+            };
+            return _.extend({}, wmtsConfig, defaults);
+        }
 
-        return layer;
-    }
+        function createLayer(layerConfig) {
+            switch (layerConfig.source) {
+            case 'WMTS':
+                return createWmtsLayer(
+                    extendWmtsConfigWithDefaults(layerConfig)
+                );
+            case 'WMS':
+                return createWmsLayer(
+                    extendWmsConfigWithDefaults(layerConfig)
+                );
+            default:
+                throw 'Unsupported source';
+            }
+        }
 
-    function _showBaseLayer(bwLayer) {
-
-        var subLayers = bwLayer.subLayers;
-        var j, bwSubLayer, layer;
-        for (j = 0; j < subLayers.length; j++) {
-            bwSubLayer = subLayers[j];
-            layer = _createLayer(bwSubLayer);
+        function addBaseLayer(layer) {
             map.getLayers().insertAt(0, layer);
         }
 
-        bwLayer.isVisible = true;
-    }
-
-    function setBaseLayer(bwLayer) {
-        _showBaseLayer(bwLayer);
-    }
-
-    function init(targetId, mapConfig, callback) {
-        config = mapConfig;
-        layers = mapConfig.layers;
-
-        initMap(targetId, mapConfig, callback);
-
-        _setUpLayerIndex();
-
-        var baseLayers = getBaseLayers();
-        var i, baseLayer;
-        for (i = 0; i < baseLayers.length; i++) {
-            baseLayer = baseLayers[i];
-            if (baseLayer.visibleOnLoad) {
-                setBaseLayer(baseLayer);
-            }
-        }
-    }
-
-    function getFirstVisibleBaseLayer() {
-        return _getVisibleBaseLayers()[0];
-    }
-
-    function getLayerById(id) {
-        var i, layer;
-        for (i = 0; i < layers.length; i++) {
-            layer = layers[i];
-            if (layer.id === id) {
-                return layer;
-            }
-        }
-    }
-
-
-    return {
-        Init: init,
-        GetOverlayLayers: getOverlayLayers,
-        GetBaseLayers: getBaseLayers,
-        GetLayerById: getLayerById,
-        GetFirstVisibleBaseLayer: getFirstVisibleBaseLayer,
-        SetBaseLayer: setBaseLayer
-    };
-};
-
-BW.MapModel.Map.WmtsSource = function (bwSubLayer) {
-    var projection = new ol.proj.Projection({
-        code: bwSubLayer.coordinate_system,
-        extent: bwSubLayer.extent,
-        units: bwSubLayer.extentUnits
-    });
-
-    var projectionExtent = projection.getExtent();
-    var size = ol.extent.getWidth(projectionExtent) / 256;
-    var resolutions = new Array(14);
-    var matrixIds = new Array(14);
-    var numZoomLevels = 18;
-    var z;
-    for (z = 0; z < numZoomLevels; ++z) {
-        resolutions[z] = size / Math.pow(2, z);
-        matrixIds[z] = projection.getCode() + ':' + z;
-    }
-
-    return new ol.source.WMTS({
-        url: bwSubLayer.url,
-        layer: bwSubLayer.name,
-        format: bwSubLayer.format,
-        projection: projection,
-        matrixSet: bwSubLayer.coordinate_system,
-        crossOrigin: 'anonymous',
-        tileGrid: new ol.tilegrid.WMTS({
-            origin: ol.extent.getTopLeft(projectionExtent),
-            resolutions: resolutions,
-            matrixIds: matrixIds
-        })
-    });
-};
-
-BW.MapModel.Map.WmsSource = function (bwSubLayer) {
-    if (bwSubLayer.tiled) {
-        return new ol.source.TileWMS({
-            params: {
-                LAYERS: bwSubLayer.name,
-                VERSION: '1.1.1'
-            },
-            url: bwSubLayer.url,
-            format: bwSubLayer.format,
-            crossOrigin: 'anonymous',
-            transparent: bwSubLayer.transparent
-        });
-    }
-    return new ol.source.ImageWMS({
-        params: {
-            LAYERS: bwSubLayer.name,
-            VERSION: '1.1.1'
-        },
-        url: bwSubLayer.url,
-        format: bwSubLayer.format,
-        crossOrigin: 'anonymous',
-        transparent: bwSubLayer.transparent
-    });
-
-};
-var BW = BW || {};
-BW.MapModel = BW.MapModel || {};
-
-BW.MapModel.SubLayer = function(config){
-    var defaults = {
-        name: '',
-        source: BW.MapModel.SubLayer.SOURCES.wmts,
-        url: '',
-        format: BW.MapModel.SubLayer.FORMATS.imagepng,
-        coordinate_system: '',
-        extent: [-1, 1, -1, 1],
-        extentUnits: 'm',
-        transparent: true,
-        layerIndex: -1,        
-        isQueryable: true
-    };
-    var instance =  $.extend({}, defaults, config); // subLayerInstance
-
-    return instance;
-};
-
-BW.MapModel.SubLayer.SOURCES = {
-    wmts: "WMTS",
-    wms: "WMS",
-    vector: "VECTOR",
-    proxyWmts: "proxyWmts",
-    proxyWms: "proxyWms"
-};
-
-BW.MapModel.SubLayer.FORMATS = {
-    imagepng: "image/png",
-    imagejpeg: "image/jpeg"
-};
-var BW = this.BW || {};
-BW.Repository = BW.Repository || {};
-
-(function (ns) {
-    'use strict';
-
-    function _createConfig(config) {
-        var result = {
-            numZoomLevels: 18,
-            newMaxRes: 21664.0,
-            center: [-20617, 7661666],
-            zoom:  4,
-            extent: [-2500000.0, 3500000.0, 3045984.0, 9045984.0],
-            layers: [],
-            tools: []
-        };
-        _.extend(result, config);
-        var layers = _.map(config.layers, function (layer) {
-            return new BW.MapModel.Layer(layer);
-        });
-        result.layers = layers;
-        return result;
-    }
-
-    var MapConfig = function (config) {
-        var defaults = {
-            numZoomLevels: 10,
-            newMaxRes: 20000,
-            renderer: 'canvas',
-            center: [-1, 1],
-            zoom: 5,
-            layers: [],
-            coordinate_system: "EPSG:32633",
-            extent: [-1, -1, -1, -1],
-            extentunits: 'm',
-            proxyHost: ""
-        };
-        return _.extend({}, defaults, config);
-    };
-
-    ns.getConfig = function (url, callback) {
-
-        function parse(data) {
-            var mapConfig = new MapConfig(_createConfig(data));
-            callback(mapConfig);
+        function addOverlay(layer) {
+            map.addLayer(layer);
         }
 
-        try {
-            if (_.isString(url)) {
-                parse(JSON.parse(url));
-            } else {
-                parse(url);
+        function createResolutions(config) {
+            var newMapRes = [];
+            newMapRes[0] = config.maxResolution;
+            var t;
+            for (t = 1; t < config.numZoomLevels; t++) {
+                newMapRes[t] = newMapRes[t - 1] / 2;
             }
-        } catch (e) {
-            $.getJSON(url, function (data) {
-                parse(data);
+            return newMapRes;
+        }
+
+        function createLayers(config) {
+            var baseLayers = _.chain(config.layers)
+                .filter(function (layer) {
+                    return layer.isBaseLayer;
+                })
+                .map(createLayer)
+                .value();
+            var overlays = _.chain(config.layers)
+                .filter(function (layer) {
+                    return !layer.isBaseLayer;
+                })
+                .map(createLayer)
+                .value();
+            return {
+                baseLayers: baseLayers,
+                overlays: overlays
+            };
+        }
+
+        function extendMapConfigWithDefaults(mapConfig) {
+            var defaults = {
+                numZoomLevels: 18,
+                maxResolution: 21664.0,
+                extent: [-2500000.0, 3500000.0, 3045984.0, 9045984.0],
+                center: [-20617, 7661666],
+                zoom: 2,
+                "srid": "EPSG:32633",
+                "extentUnits": "m",
+            };
+
+            return _.extend({}, mapConfig, defaults);
+        }
+
+        function init(mapConfig) {
+            config = extendMapConfigWithDefaults(mapConfig);
+            var resolutions = createResolutions(config);
+            var projection = createProjection(config);
+            map = new ol.Map({
+                target: mapElement,
+                renderer: mapConfig.renderer,
+                layers: [],
+                view: new ol.View({
+                    projection: projection,
+                    center: config.center,
+                    zoom: config.zoom,
+                    resolutions: resolutions,
+                    maxResolution: config.maxResolution,
+                    numZoomLevels: config.numZoomLevels
+                }),
+                overlays: []
             });
+
+            var layers = createLayers(config);
+            _.each(layers.baseLayers, addBaseLayer);
+            _.each(layers.overlays, addOverlay);
+
+            if (createdCallback) {
+                createdCallback(map);
+            }
         }
+
+        function getConfig(url, callback) {
+            try {
+                if (_.isString(url)) {
+                    callback(JSON.parse(url));
+                } else {
+                    callback(url);
+                }
+            } catch (e) {
+                $.getJSON(url, function (data) {
+                    callback(data);
+                });
+            }
+        }
+
+        function setupMap(mapConfig, element, callback) {
+            mapElement = element;
+            createdCallback = callback;
+            getConfig(mapConfig, init);
+        }
+
+        return {
+            setupMap: setupMap
+        };
     };
 
-}(BW.Repository));
-
-/*
-    Wraps the new OpenLayers 3 "core" lib to be able to simply setup a map
-    with layers based on a json-config. See ol3demo.html for example use.
-
-*/
-
-var BW = this.BW || {};
-BW.MapCore = BW.MapCore || {};
-(function (ns) {
-    'use strict';
-
-    ns.setupMap = function (mapDiv, mapConfig, callback) {
-        var mapModel = new BW.MapModel.Map(map);
-        function initMap(data) {
-            mapModel.Init(mapDiv, data, callback);
-        }
-        BW.Repository.getConfig(mapConfig, initMap);
-    };
-}(BW.MapCore));
+}(bbol3));

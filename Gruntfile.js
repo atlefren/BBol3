@@ -7,12 +7,8 @@ module.exports = function(grunt) {
                 separator: '\n'
             },
             ol3core: {
-              src: [                    
-                    'src/BW.MapModel/BW.MapModel.Layer.js',
-                    'src/BW.MapModel/BW.MapModel.Map.js',
-                    'src/BW.MapModel/BW.MapModel.SubLayer.js',
-                    'src/BW.Repository/BW.Repository.ConfigRepository.js',
-                    'src/ol3wrapper.js'
+              src: [                                        
+                    'src/ConfigParser.js'
                 ],
                 dest: 'dist/ol3core.js'
             },
