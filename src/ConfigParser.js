@@ -150,10 +150,6 @@ var bbol3 = this.bbol3 || {};
                 config: extendWmsConfigWithDefaults,
                 create: createWmsLayer
             },
-            XYZ: {
-                config: null,
-                create: null
-            },
             GeoJSON: {
                 config: extendGeoJSONConfigWithDefaults,
                 create: createGeoJsonLayer
