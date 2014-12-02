@@ -10,6 +10,7 @@ var bbol3 = this.bbol3 || {};
         var config;
         var mapElement;
         var createdCallback;
+        var currentBaseLayer;
 
         function getFromConfigOrMapConfig(givenConfig, attr) {
             if (_.has(givenConfig, attr)) {
@@ -55,6 +56,10 @@ var bbol3 = this.bbol3 || {};
             return new ol.layer.Image(layerData);
         }
 
+        var layerDefaults = {
+            visible: true
+        };
+
         function extendWmsConfigWithDefaults(wmsConfig) {
             var defaults = {
                 format: 'image/png',
@@ -64,7 +69,7 @@ var bbol3 = this.bbol3 || {};
             if (!_.has(wmsConfig, 'tiled')) {
                 wmsConfig.tiled = true;
             }
-            return _.extend({}, wmsConfig, defaults);
+            return _.extend({}, layerDefaults, defaults, wmsConfig);
         }
 
         function createWmtsLayer(layerConfig) {
@@ -113,30 +118,45 @@ var bbol3 = this.bbol3 || {};
             var defaults = {
                 format: 'image/png'
             };
-            return _.extend({}, wmtsConfig, defaults);
+            return _.extend({}, layerDefaults, defaults, wmtsConfig);
         }
 
         function createLayer(layerConfig) {
+            var layer;
             switch (layerConfig.source) {
             case 'WMTS':
-                return createWmtsLayer(
-                    extendWmtsConfigWithDefaults(layerConfig)
-                );
+                layerConfig = extendWmtsConfigWithDefaults(layerConfig);
+                layer = createWmtsLayer(layerConfig);
+                break;
             case 'WMS':
-                return createWmsLayer(
-                    extendWmsConfigWithDefaults(layerConfig)
-                );
+                layerConfig = extendWmsConfigWithDefaults(layerConfig);
+                layer = createWmsLayer(layerConfig);
+                break;
             default:
                 throw 'Unsupported source';
             }
+            return {
+                ollayer: layer,
+                name: layerConfig.name,
+                visible: layerConfig.visible
+            };
         }
 
-        function addBaseLayer(layer) {
-            map.getLayers().insertAt(0, layer);
+        function hideLayer(layer) {
+            map.removeLayer(layer.ollayer);
+        }
+
+        function setBaseLayer(layer) {
+            layer.selected = true;
+            if (currentBaseLayer) {
+                hideLayer(currentBaseLayer);
+            }            
+            map.getLayers().insertAt(0, layer.ollayer);
+            currentBaseLayer = layer;
         }
 
         function addOverlay(layer) {
-            map.addLayer(layer);
+            map.addLayer(layer.ollayer);
         }
 
         function createResolutions(config) {
@@ -175,8 +195,8 @@ var bbol3 = this.bbol3 || {};
                 extent: [-2500000.0, 3500000.0, 3045984.0, 9045984.0],
                 center: [-20617, 7661666],
                 zoom: 2,
-                "srid": "EPSG:32633",
-                "extentUnits": "m",
+                'srid': 'EPSG:32633',
+                'extentUnits': 'm',
             };
 
             return _.extend({}, mapConfig, defaults);
@@ -202,11 +222,16 @@ var bbol3 = this.bbol3 || {};
             });
 
             var layers = createLayers(config);
-            _.each(layers.baseLayers, addBaseLayer);
-            _.each(layers.overlays, addOverlay);
+            //set the first base layer visible            
+            setBaseLayer(layers.baseLayers[0]);
+            _.chain(layers.overlays)
+                .filter(function (layer) {
+                    return layer.visible;
+                })
+                .each(addOverlay);
 
             if (createdCallback) {
-                createdCallback(map);
+                createdCallback(map, layers);
             }
         }
 
@@ -231,7 +256,10 @@ var bbol3 = this.bbol3 || {};
         }
 
         return {
-            setupMap: setupMap
+            setupMap: setupMap,
+            setBaseLayer: setBaseLayer,
+            addOverlay: addOverlay,
+            hideLayer: hideLayer
         };
     };
 

@@ -118,7 +118,8 @@
             }
         );
 
-        function mapInit(olmap) {
+        function mapInit(olmap, layers) {
+            console.log(layers);
             var vector = harbours.getLayer()
             //legg til kartet
             olmap.addLayer(vector);

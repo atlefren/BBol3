@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+        #left {
+            float: left;
+            width: 300px;
+        }
+        #map {
+
+            height: 500px;
+            width: 500px;
+            float: left;
+            border: 1px solid black;
+        }
+
+    </style>
+    <link rel="stylesheet" type="text/css" href="../lib/ol3/ol.css">
+</head>
+<body>
+
+<div id="left">
+</div>
+<div id="map"></div>
+
+<script type="text/javascript" src="../lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="../lib/underscore/underscore-min.js"></script>
+<script type="text/javascript" src="../lib/backbone/backbone.js"></script>
+<script type="text/javascript" src="../lib/ol3/ol.js"></script>
+
+
+<script type="text/javascript" src="../dist/ol3core.js"></script>
+<script type="text/javascript" src="../dist/ol3listmap.js"></script>
+<script type="text/javascript" src="../dist/ol3selectevents.js"></script>
+<script type="text/javascript" src="../dist/ol3markers.js"></script>
+
+
+<script type="text/javascript">
+(function () {
+    'use strict';
+
+    var mapConfig = {
+        "layers": [
+            {
+                "isBaseLayer": true,                
+                "source": "WMTS",
+                "url": "http://opencache.statkart.no/gatekeeper/gk/gk.open_wmts?",
+                "layername": "havbunn_grunnkart",
+                "name": "Havbunn Grunnkart"
+            },
+            {
+                "isBaseLayer": true,                
+                "source": "WMTS",
+                "url": "http://opencache.statkart.no/gatekeeper/gk/gk.open_wmts?",
+                "layername": "norges_grunnkart",
+                "name": "Norges Grunnkart"
+            },
+            {
+                "isBaseLayer": true,                
+                "source": "WMTS",
+                "url": "http://opencache.statkart.no/gatekeeper/gk/gk.open_wmts?",
+                "layername": "topo2",
+                "name": "Topo2"
+            },
+            {
+                "isBaseLayer": false,                
+                "source": "WMS",
+                "url": "http://wms.geonorge.no/skwms1/wms.nmg?",
+                "layername": "Norges_okonomiske_sone",
+                "name": "Norges økonomiske sone",
+                "tiled": false,
+            },
+            {
+                "isBaseLayer": false,                
+                "source": "WMS",
+                "url": "http://wms.geonorge.no/skwms1/wms.nmg?",
+                "layername": "Grunnlinje",
+                "visible": false,
+                "name": "Grunnlinje",
+                "tiled": false,
+            }
+        ]
+    };
+
+    var BaseLayerView = Backbone.View.extend({
+        
+        tagName: 'li',
+
+        template: _.template('<input name="bg" type="radio" <% if (selected) { print("checked") } %> ><%= name %>'),
+
+        events: {
+            'change input': 'change'
+        },
+
+        render: function () {
+            this.$el.html(this.template({
+                name: this.model.get('name'),
+                selected: this.model.get('selected')
+            }));
+            return this;
+        },
+
+        change: function () {
+            this.model.collection.trigger('selectLayer', this.model);
+        }
+    });
+
+    var OverlayLayerView = Backbone.View.extend({
+        
+        tagName: 'li',
+
+        template: _.template('<input type="checkbox" <% if (visible) { print("checked") } %>><%= name %>'),
+
+        events: {
+            'change input': 'change'
+        },
+
+        render: function () {            
+            this.$el.html(this.template({
+                name: this.model.get('name'),
+                visible: this.model.get('visible')
+            }));
+            return this;
+        },
+
+        change: function () {
+            if (this.$('input').prop('checked')) {
+                this.model.collection.trigger('selectLayer', this.model);       
+            } else {
+                this.model.collection.trigger('deselectLayer', this.model);       
+            }
+        }
+    });
+
+    var LayersView = Backbone.View.extend({
+
+        tagName: 'ul',        
+
+        render: function () {
+            var els = this.collection.map(function (layer) {
+                return new this.subview({model: layer}).render().$el;
+            }, this);
+            this.$el.append(els);
+            return this;
+        }
+    });
+
+    var BaseLayersView = LayersView.extend({
+        subview: BaseLayerView,
+    });
+
+    var OverlayLayersView = LayersView.extend({
+        subview: OverlayLayerView
+    });
+
+    function initPage(mapConfig, mapEl, listEl) {
+
+        var cp = new bbol3.ConfigParser();
+        function mapInit(olmap, layers) {
+            var baseLayers = new Backbone.Collection(layers.baseLayers);
+            var overlays = new Backbone.Collection(layers.overlays);            
+            var el = $('#' + listEl);
+            baseLayers.on('selectLayer', function (layerModel) {
+                cp.setBaseLayer(layerModel.attributes);
+            });
+            overlays.on('selectLayer', function (layerModel) {
+                cp.addOverlay(layerModel.attributes);
+            });
+            overlays.on('deselectLayer', function (layerModel) {
+                cp.hideLayer(layerModel.attributes);
+            });
+            el.append('<h3>Base layers</h3>');
+            el.append(new BaseLayersView({collection: baseLayers}).render().$el);
+            el.append('<h3>Overlays</h3>');
+            el.append(new OverlayLayersView({collection: overlays}).render().$el);
+        }
+                
+        cp.setupMap(mapConfig, document.getElementById(mapEl), mapInit);
+
+    }
+    initPage(mapConfig, 'map', 'left');
+
+
+}());
+</script>
+
+</body>
+</html>
