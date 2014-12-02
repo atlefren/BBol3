@@ -116,21 +116,32 @@ var bbol3 = this.bbol3 || {};
             return _.extend({}, defaults, wmtsConfig);
         }
 
-        function createLayer(layerConfig) {
-            var layer;
-            switch (layerConfig.source) {
-            case 'WMTS':
-                layerConfig = extendWmtsConfigWithDefaults(layerConfig);
-                layer = createWmtsLayer(layerConfig);
-                break;
-            case 'WMS':
-                layerConfig = extendWmsConfigWithDefaults(layerConfig);
-                layer = createWmsLayer(layerConfig);
-                break;
-            default:
-                throw 'Unsupported source';
+        var SOURCES = {
+            WMTS: {
+                config: extendWmtsConfigWithDefaults,
+                create: createWmtsLayer
+            },
+            WMS: {
+                config: extendWmsConfigWithDefaults,
+                create: createWmsLayer
+            },
+            XYZ: {
+                config: null,
+                create: null
+            },
+            GeoJSON: {
+                config: null,
+                create: null
             }
+        };
 
+        function createLayer(layerConfig) {
+            if (!_.has(SOURCES, layerConfig.source)) {
+                throw 'Unsupported source: "' + layerConfig.source +  '"';
+            }
+            var source = SOURCES[layerConfig.source];
+            layerConfig = source.config(layerConfig);
+            var layer = source.create(layerConfig);
             return _.extend({ollayer: layer}, layerConfig);
         }
 
@@ -151,14 +162,12 @@ var bbol3 = this.bbol3 || {};
             map.addLayer(layer.ollayer);
         }
 
-        function createResolutions(config) {
-            var newMapRes = [];
-            newMapRes[0] = config.maxResolution;
-            var t;
-            for (t = 1; t < config.numZoomLevels; t++) {
-                newMapRes[t] = newMapRes[t - 1] / 2;
-            }
-            return newMapRes;
+        function createResolutionsArray(config) {
+            var range = _.range(1, config.numZoomLevels);
+            return _.reduce(range, function (acc, i) {
+                acc.push(acc[i - 1] / 2);
+                return acc;
+            }, [config.maxResolution]);
         }
 
         function createLayers(config) {
@@ -192,8 +201,8 @@ var bbol3 = this.bbol3 || {};
                 extent: [-2500000.0, 3500000.0, 3045984.0, 9045984.0],
                 center: [-20617, 7661666],
                 zoom: 2,
-                'srid': 'EPSG:32633',
-                'extentUnits': 'm',
+                srid: 'EPSG:32633',
+                extentUnits: 'm'
             };
 
             return _.extend({}, mapConfig, defaults);
@@ -225,7 +234,7 @@ var bbol3 = this.bbol3 || {};
 
         function init(mapConfig) {
             config = extendMapConfigWithDefaults(mapConfig);
-            var resolutions = createResolutions(config);
+            var resolutions = createResolutionsArray(config);
             var projection = createProjection(config);
             map = new ol.Map({
                 target: mapElement,
