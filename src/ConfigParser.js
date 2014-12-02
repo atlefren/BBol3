@@ -28,11 +28,12 @@ var bbol3 = this.bbol3 || {};
         }
 
         function createWmsLayer(layerConfig) {
+            var params = layerConfig.options || {};
             var sourceData = {
-                params: {
+                params: _.extend(params, {
                     LAYERS: layerConfig.layername,
                     VERSION: layerConfig.version
-                },
+                }),
                 url: layerConfig.url,
                 format: layerConfig.format,
                 crossOrigin: 'anonymous',
@@ -59,11 +60,17 @@ var bbol3 = this.bbol3 || {};
         function extendWmsConfigWithDefaults(wmsConfig) {
             var defaults = {
                 format: 'image/png',
-                transparent: true,
                 version: '1.1.1'
             };
             if (!_.has(wmsConfig, 'tiled')) {
                 wmsConfig.tiled = true;
+            }
+            if (!_.has(wmsConfig, 'transparent')) {
+                if (wmsConfig.isBaseLayer) {
+                    wmsConfig.transparent = false;
+                } else {
+                    wmsConfig.transparent = true;
+                }
             }
             return _.extend({}, defaults, wmsConfig);
         }
@@ -116,6 +123,25 @@ var bbol3 = this.bbol3 || {};
             return _.extend({}, defaults, wmtsConfig);
         }
 
+        function createGeoJsonLayer(layerConfig) {
+            var params = {};
+            if (_.has(layerConfig, 'data')) {
+                params.object = layerConfig.data;
+            }
+            if (_.has(layerConfig, 'url')) {
+                params.url = layerConfig.url;
+            }
+            return new ol.layer.Vector({
+                source: new ol.source.GeoJSON(params)
+            });
+        }
+
+        function extendGeoJSONConfigWithDefaults (geoJsonConfig) {
+         var defaults = {
+            };
+            return _.extend({}, defaults, geoJsonConfig);
+        }
+
         var SOURCES = {
             WMTS: {
                 config: extendWmtsConfigWithDefaults,
@@ -130,8 +156,8 @@ var bbol3 = this.bbol3 || {};
                 create: null
             },
             GeoJSON: {
-                config: null,
-                create: null
+                config: extendGeoJSONConfigWithDefaults,
+                create: createGeoJsonLayer
             }
         };
 
@@ -202,10 +228,11 @@ var bbol3 = this.bbol3 || {};
                 center: [-20617, 7661666],
                 zoom: 2,
                 srid: 'EPSG:32633',
-                extentUnits: 'm'
+                extentUnits: 'm',
+                renderer: 'canvas'
             };
 
-            return _.extend({}, mapConfig, defaults);
+            return _.extend({}, defaults, mapConfig);
         }
 
         function initBaseLayer(baseLayers) {
@@ -236,9 +263,14 @@ var bbol3 = this.bbol3 || {};
             config = extendMapConfigWithDefaults(mapConfig);
             var resolutions = createResolutionsArray(config);
             var projection = createProjection(config);
+
+            if (_.isString(mapElement)) {
+                mapElement = document.getElementById(mapElement);
+            }
+
             map = new ol.Map({
                 target: mapElement,
-                renderer: mapConfig.renderer,
+                renderer: config.renderer,
                 layers: [],
                 view: new ol.View({
                     projection: projection,
@@ -254,7 +286,6 @@ var bbol3 = this.bbol3 || {};
             var layers = createLayers(config);
             initBaseLayer(layers.baseLayers);
             initOverlays(layers.overlays);
-
             if (createdCallback) {
                 createdCallback(map, layers);
             }

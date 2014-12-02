@@ -7,7 +7,7 @@ module.exports = function(grunt) {
                 separator: '\n'
             },
             ol3core: {
-              src: [                                        
+              src: [
                     'src/ConfigParser.js'
                 ],
                 dest: 'dist/ol3core.js'
@@ -77,5 +77,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-buster');
     grunt.loadNpmTasks('grunt-bump-build-git');
     grunt.registerTask('default', ['concat', 'uglify']);
+    grunt.registerTask('test', ['buster']);
 
 };
