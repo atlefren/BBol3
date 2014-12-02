@@ -56,10 +56,6 @@ var bbol3 = this.bbol3 || {};
             return new ol.layer.Image(layerData);
         }
 
-        var layerDefaults = {
-            visible: true
-        };
-
         function extendWmsConfigWithDefaults(wmsConfig) {
             var defaults = {
                 format: 'image/png',
@@ -69,7 +65,7 @@ var bbol3 = this.bbol3 || {};
             if (!_.has(wmsConfig, 'tiled')) {
                 wmsConfig.tiled = true;
             }
-            return _.extend({}, layerDefaults, defaults, wmsConfig);
+            return _.extend({}, defaults, wmsConfig);
         }
 
         function createWmtsLayer(layerConfig) {
@@ -88,7 +84,6 @@ var bbol3 = this.bbol3 || {};
             }
 
             var projection = createProjection(layerConfig);
-
             var projectionExtent = projection.getExtent();
             var numZoomLevels = config.numZoomLevels;
             var resolutions = createResolutions(numZoomLevels, projection);
@@ -118,7 +113,7 @@ var bbol3 = this.bbol3 || {};
             var defaults = {
                 format: 'image/png'
             };
-            return _.extend({}, layerDefaults, defaults, wmtsConfig);
+            return _.extend({}, defaults, wmtsConfig);
         }
 
         function createLayer(layerConfig) {
@@ -135,12 +130,8 @@ var bbol3 = this.bbol3 || {};
             default:
                 throw 'Unsupported source';
             }
-            console.log(layerConfig.visible)
-            return {
-                ollayer: layer,
-                name: layerConfig.name,
-                visible: layerConfig.visible
-            };
+
+            return _.extend({ollayer: layer}, layerConfig);
         }
 
         function hideLayer(layer) {
@@ -148,16 +139,15 @@ var bbol3 = this.bbol3 || {};
         }
 
         function setBaseLayer(layer) {
-            layer.selected = true;
+            layer.visible = true;
             if (currentBaseLayer) {
                 hideLayer(currentBaseLayer);
-            }            
+            }
             map.getLayers().insertAt(0, layer.ollayer);
             currentBaseLayer = layer;
         }
 
         function addOverlay(layer) {
-            console.log(layer);
             map.addLayer(layer.ollayer);
         }
 
@@ -182,6 +172,11 @@ var bbol3 = this.bbol3 || {};
                 .filter(function (layer) {
                     return !layer.isBaseLayer;
                 })
+                .each(function (layer) {
+                    if (_.isUndefined(layer.visible)) {
+                        layer.visible = true;
+                    }
+                })
                 .map(createLayer)
                 .value();
             return {
@@ -204,6 +199,30 @@ var bbol3 = this.bbol3 || {};
             return _.extend({}, mapConfig, defaults);
         }
 
+        function initBaseLayer(baseLayers) {
+            var visible = _.filter(baseLayers, function (layer) {
+                return layer.visible;
+            });
+            if (visible.length) {
+                setBaseLayer(visible[0]);
+                _.chain(visible)
+                    .rest()
+                    .each(function (layer) {
+                        layer.visible = false;
+                    });
+            } else {
+                setBaseLayer(baseLayers[0]);
+            }
+        }
+
+        function initOverlays(overlays) {
+            _.chain(overlays)
+                .filter(function (layer) {
+                    return layer.visible;
+                })
+                .each(addOverlay);
+        }
+
         function init(mapConfig) {
             config = extendMapConfigWithDefaults(mapConfig);
             var resolutions = createResolutions(config);
@@ -224,13 +243,8 @@ var bbol3 = this.bbol3 || {};
             });
 
             var layers = createLayers(config);
-            //set the first base layer visible            
-            setBaseLayer(layers.baseLayers[0]);
-            _.chain(layers.overlays)
-                .filter(function (layer) {
-                    return layer.visible;
-                })
-                .each(addOverlay);
+            initBaseLayer(layers.baseLayers);
+            initOverlays(layers.overlays);
 
             if (createdCallback) {
                 createdCallback(map, layers);

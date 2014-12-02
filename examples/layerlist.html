@@ -9,7 +9,6 @@
             width: 300px;
         }
         #map {
-
             height: 500px;
             width: 500px;
             float: left;
@@ -55,7 +54,8 @@
                 "source": "WMTS",
                 "url": "http://opencache.statkart.no/gatekeeper/gk/gk.open_wmts?",
                 "layername": "norges_grunnkart",
-                "name": "Norges Grunnkart"
+                "name": "Norges Grunnkart",
+                visible: true
             },
             {
                 "isBaseLayer": true,                
@@ -88,7 +88,7 @@
         
         tagName: 'li',
 
-        template: _.template('<input name="bg" type="radio" <% if (selected) { print("checked") } %> ><%= name %>'),
+        template: _.template('<input name="bg" type="radio" <% if (visible) { print("checked") } %> ><%= name %>'),
 
         events: {
             'change input': 'change'
@@ -97,7 +97,7 @@
         render: function () {
             this.$el.html(this.template({
                 name: this.model.get('name'),
-                selected: this.model.get('selected')
+                visible: this.model.get('visible')
             }));
             return this;
         },
