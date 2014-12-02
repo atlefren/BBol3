@@ -136,9 +136,8 @@ var bbol3 = this.bbol3 || {};
             });
         }
 
-        function extendGeoJSONConfigWithDefaults (geoJsonConfig) {
-         var defaults = {
-            };
+        function extendGeoJSONConfigWithDefaults(geoJsonConfig) {
+            var defaults = {};
             return _.extend({}, defaults, geoJsonConfig);
         }
 
