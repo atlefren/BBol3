@@ -1,3 +1,4 @@
+/*global ol: false */
 /*
     Sets up a marker style (based on provided markers) with an optional zIndex.
 

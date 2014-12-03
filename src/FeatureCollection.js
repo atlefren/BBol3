@@ -116,7 +116,7 @@ var BW = this.BW || {};
 
         model: ns.FeatureModel,
 
-        reset: function(models, options) {
+        reset: function (models, options) {
             var format = new ol.format.GeoJSON();
             var modifiedModels = models.map(function (model) {
                 if (model instanceof Backbone.Model) {
