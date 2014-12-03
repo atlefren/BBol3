@@ -108,6 +108,89 @@ Set one of these
 A function that wraps the returned layers in Backbone collections. See examples/layerlist.html
 
 
+#### bbol3.FeatureModel & bbol3.FeatureCollection
+Provides functionality for mapping an openlayers vector layer and features to
+Backbone models and views.
+
+##### Usage:
+
+Create a new bbol3.FeatureModel (or a subclass) by passing it data that has a
+"geometry" field as a geoJSON geometry. ie:
+
+    new bbol3.FeatureCollection([{
+        "name": "myname",
+        "geometry": {"type":"Point","coordinates":[10.0, 10.0]}
+    }])
+
+The geometry field will be converted to a "feature"-attribute on the model,
+this is in fact an ol vector feature, and the geometry attribute will be unset.
+The created feature will also be extended to be able to pass Backbone-style events.
+
+The FeatureCollection also handles selects and hover events, and should be
+given two openlayers style obects in the options-dict:
+    
+        new bbol3.FeatureCollection(
+            featureList,
+        {
+            featureStyle: styleForNormal,
+            selectStyle: styleForSelected
+        }
+    );
+
+Expects the feature attribute to trigger the following events:
+- over
+- out
+- select
+- deselect
+
+These events changes the feature style and further triggers these events on
+the model, so that views can act accordingly.
+
+The FeatureCollection also provides a getLayer()-method, that returns an
+ol vector layer with a feature for all it's models.
+
+
+See examples/ol3demo.html for usage.
+
+Under development
+
+#### bbol3.ListMapView,
+Base Backbone view that can be used to provided map-list interactions as in Havnebase.
+
+Assumes that the model bassed has a feature property (which should be an ol3 vector feature)
+
+Assumes that the model triggers the following events:
+- over: for mouseover on marker
+- out: for mouseout on marker
+- select: for marker click
+- deselect: for deselect marker
+
+This view triggers the same events on the models based on DOM-events (can be overridden in events).
+
+To use this class, subclass it and override the following methods:
+
+- render
+- highlight
+- unhighlight
+- select  (be sure to call super though)
+- deselect (be sure to call super though)
+
+See ol3demo.html for example use
+
+
+#### BBol3.Markers
+Sets up a marker style (based on provided markers) with an optional zIndex.
+
+Usage:
+
+    var markerCreator = new bbol3.Markers('/path/to/markers/folder');
+    var myMarker = markerCreator.createMarkerStyle('red', 'md'); //creates a medium red marker
+    var myMarker = markerCreator.createMarkerStyle('green', 'sm', 1000); //creates a large green marker with z-index 1000
+
+Use the createMarkerStyleDict in the same fasihon to get a POJO (ie not wrapped i ol.styleStyle).
+This is useful for creating more complicated rules and such.
+
+
 Running tests
 -------------
 0. Make sure nodejs is installed

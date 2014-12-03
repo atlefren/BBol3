@@ -1,52 +1,9 @@
 /*global Backbone: false, ol: false*/
 
-/*
-    Provides functionality for mapping an openlayers vector layer and features to
-    Backbone models and views.
-
-    Usage:
-
-    Create a new BW.FeatureModel (or a subclass) by passing it data that has a
-    "geometry" field as a geoJSON geometry. ie:
-
-    new BW.FeatureCollection([{
-        "name": "myname",
-        "geometry": {"type":"Point","coordinates":[10.0, 10.0]}
-    }])
-
-    The geometry field will be converted to a "feature"-attribute on the model,
-    this is in fact an ol vector feature, and the geometry attribute will be unset.
-    The created feature will also be extended to be able to pass Backbone-style events.
-
-    The FeatureCollection also handles selects and hover events, and should be
-    given two openlayers style obects in the options-dict:
-
-    new BW.FeatureCollection(
-        featureList,
-        {
-            featureStyle: styleForNormal,
-            selectStyle: styleForSelected
-        }
-    );
-
-    Expects the feature attribute to trigger the following events:
-        - over
-        - out
-        - select
-        - deselect
-
-    These events changes the feature style and further triggers these events on
-    the model, so that views can act accordingly.
-
-    The FeatureCollection also provides a getLayer()-method, that returns an
-    ol vector layer with a feature for all it's models.
-*/
-
-var BW = this.BW || {};
+var bbol3 = this.bbol3 || {};
 (function (ns) {
     'use strict';
 
-     //modell for havn
     ns.FeatureModel = Backbone.Model.extend({
         initialize: function (data) {
 
@@ -170,4 +127,4 @@ var BW = this.BW || {};
         }
     });
 
-}(BW));
+}(bbol3));

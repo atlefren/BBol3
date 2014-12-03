@@ -63,16 +63,16 @@
         ]
     };
 
-    var HarbourView = BW.ListMapView.extend({
+    var HarbourView = bbol3.ListMapView.extend({
 
         tagName: 'li',
 
         events: _.extend({
 
-        }, BW.ListMapView.prototype.events),
+        }, bbol3.ListMapView.prototype.events),
 
         initialize: function () {
-              BW.ListMapView.prototype.initialize.apply(this, arguments);
+              bbol3.ListMapView.prototype.initialize.apply(this, arguments);
         },
 
         render: function () {
@@ -85,32 +85,32 @@
         },
 
         select: function () {
-            BW.ListMapView.prototype.select.apply(this, arguments);
+            bbol3.ListMapView.prototype.select.apply(this, arguments);
             this.render();
         },
 
         deselect: function () {
-            BW.ListMapView.prototype.deselect.apply(this, arguments);
+            bbol3.ListMapView.prototype.deselect.apply(this, arguments);
             this.render();
         },
 
         highlight: function () {
-            BW.ListMapView.prototype.highlight.apply(this, arguments);
+            bbol3.ListMapView.prototype.highlight.apply(this, arguments);
             this.$el.css('background', 'red');
         },
 
         unhighlight: function () {
-            BW.ListMapView.prototype.unhighlight.apply(this, arguments);
+            bbol3.ListMapView.prototype.unhighlight.apply(this, arguments);
             this.$el.css('background', '');
         }
     });
 
 
     function initPage(data, mapConfig, mapEl, listEl) {
-        var markers = new BW.MapCore.Markers('../img/markers');
+        var markers = new bbol3.Markers('../img/markers');
         var normalStyle = markers.createMarkerStyle('green', 'md');
         var hlStyle = markers.createMarkerStyle('red', 'md', 1000);
-        var harbours = new BW.FeatureCollection(
+        var harbours = new bbol3.FeatureCollection(
             data,
             {
                 featureStyle: normalStyle,
@@ -119,13 +119,12 @@
         );
 
         function mapInit(olmap, layers) {
-            console.log(layers);
             var vector = harbours.getLayer()
             //legg til kartet
             olmap.addLayer(vector);
             //registrer events
-            BW.SelectEvents.registerHoverEvents(olmap, vector);
-            BW.SelectEvents.registerClickEvents(olmap, vector);
+            bbol3.SelectEvents.registerHoverEvents(olmap, vector);
+            bbol3.SelectEvents.registerClickEvents(olmap, vector);
         }
 
         var cp = new bbol3.ConfigParser();

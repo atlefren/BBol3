@@ -1,18 +1,7 @@
-/*
-    Sets up a marker style (based on provided markers) with an optional zIndex.
+/*global ol: false */
 
-    Usage:
-    var markerCreator = new BW.MapCore.Markers('/path/to/markers/folder');
-    var myMarker = markerCreator.createMarkerStyle('red', 'md'); //creates a medium red marker
-    var myMarker = markerCreator.createMarkerStyle('green', 'sm', 1000); //creates a large green marker with z-index 1000
-
-    Use the createMarkerStyleDict in the same fasihin to get a POJO (ie not wrapped i ol.styleStyle).
-    This is useful for creating more complicated rules and such.
-*/
-
-var BW = this.BW || {};
-BW.MapCore = BW.MapCore || {};
-BW.MapCore.Markers = function (imgUrl) {
+var bbol3 = this.bbol3 || {};
+bbol3.Markers = function (imgUrl) {
     'use strict';
 
     function createMarkerStyleDict(color, size, zIndex) {

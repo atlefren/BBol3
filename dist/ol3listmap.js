@@ -1,52 +1,9 @@
 /*global Backbone: false, ol: false*/
 
-/*
-    Provides functionality for mapping an openlayers vector layer and features to
-    Backbone models and views.
-
-    Usage:
-
-    Create a new BW.FeatureModel (or a subclass) by passing it data that has a
-    "geometry" field as a geoJSON geometry. ie:
-
-    new BW.FeatureCollection([{
-        "name": "myname",
-        "geometry": {"type":"Point","coordinates":[10.0, 10.0]}
-    }])
-
-    The geometry field will be converted to a "feature"-attribute on the model,
-    this is in fact an ol vector feature, and the geometry attribute will be unset.
-    The created feature will also be extended to be able to pass Backbone-style events.
-
-    The FeatureCollection also handles selects and hover events, and should be
-    given two openlayers style obects in the options-dict:
-
-    new BW.FeatureCollection(
-        featureList,
-        {
-            featureStyle: styleForNormal,
-            selectStyle: styleForSelected
-        }
-    );
-
-    Expects the feature attribute to trigger the following events:
-        - over
-        - out
-        - select
-        - deselect
-
-    These events changes the feature style and further triggers these events on
-    the model, so that views can act accordingly.
-
-    The FeatureCollection also provides a getLayer()-method, that returns an
-    ol vector layer with a feature for all it's models.
-*/
-
-var BW = this.BW || {};
+var bbol3 = this.bbol3 || {};
 (function (ns) {
     'use strict';
 
-     //modell for havn
     ns.FeatureModel = Backbone.Model.extend({
         initialize: function (data) {
 
@@ -116,7 +73,7 @@ var BW = this.BW || {};
 
         model: ns.FeatureModel,
 
-        reset: function(models, options) {
+        reset: function (models, options) {
             var format = new ol.format.GeoJSON();
             var modifiedModels = models.map(function (model) {
                 if (model instanceof Backbone.Model) {
@@ -170,35 +127,11 @@ var BW = this.BW || {};
         }
     });
 
-}(BW));
+}(bbol3));
 
 /*global Backbone:false */
 
-/*
-    Base Backbone view that can be used to provided map-list interactions as in Havnebase.
-
-    Assumes that the model bassed has a feature property (which should be an ol3 vector feature)
-
-    Assumes that the model triggers the following events:
-        over: for mouseover on marker
-        out: for mouseout on marker
-        select: for marker click
-        deselect: for deselect marker
-
-    This view triggers the same events on the models based on DOM-events (can be overridden in events).
-
-    To use this class, subclass it and override the following methods:
-
-        render
-        highlight
-        unhighlight
-        select  (be sure to call super though)
-        deselect (be sure to call super though)
-
-        See ol3demo.html for example use
-*/
-
-var BW = this.BW || {};
+var bbol3 = this.bbol3 || {};
 (function (ns) {
     'use strict';
 
@@ -259,4 +192,4 @@ var BW = this.BW || {};
         }
     });
 
-}(BW));
+}(bbol3));

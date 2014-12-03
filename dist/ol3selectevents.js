@@ -1,5 +1,5 @@
 /*
-    BW.registerHoverEvents registers hover/click events on a given vector layer on a given map.
+    bbol3.SelectEvents.registerHoverEvents registers hover/click events on a given vector layer on a given map.
     The events are triggered as Backbone events, so it's assumed that prevoius code has done
     _.extend(feature, Backbone.events);
 
@@ -8,8 +8,8 @@
     See ol3demo.html for example use.
 */
 
-var BW = this.BW || {};
-BW.SelectEvents = BW.SelectEvents || {};
+var bbol3 = this.bbol3 || {};
+bbol3.SelectEvents = bbol3.SelectEvents || {};
 (function (ns) {
     'use strict';
 
@@ -51,4 +51,4 @@ BW.SelectEvents = BW.SelectEvents || {};
         registerSelectEvents('click', map, layer, 'select', 'deselect');
     };
 
-}(BW.SelectEvents));
+}(bbol3.SelectEvents));
