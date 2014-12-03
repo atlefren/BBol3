@@ -1,7 +1,7 @@
 {
   "name": "bbol3",
   "license": "BSD",
-  "version": "0.1.5",
+  "version": "0.1.5+build.1417651076690",
   "description": "Backbone and ol3 integration",
   "main": "dist/noe.js",
   "repository": {
