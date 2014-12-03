@@ -77,16 +77,28 @@ module.exports = function (grunt) {
         }
       }
     },
+    clean: {
+      build: {
+       src: ['dist/']
+     }
+    },
     build: {
-      tasks: ['default'],
+      tasks: ['clean:build', 'default'],
       gitAdd: 'package.json bower.json dist/*'
+    },
+    sync: {
+      options: {
+        include: ['name', 'version', 'description', 'main', 'license']
+      } 
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-buster');
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-bump-build-git');
+  grunt.loadNpmTasks('grunt-sync-pkg');
 
   grunt.registerTask('default', ['concat', 'uglify']);
   grunt.registerTask('test', ['buster']);

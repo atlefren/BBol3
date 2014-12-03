@@ -1,11 +1,13 @@
 {
   "name": "bbol3",
-  "version": "0.1.1",
+  "version": "0.1.1+build.1417638079911",
   "authors": [
     "Atle Frenvik Sveen <atle.sveen@gmail.com>"
   ],
   "description": "Backbone and ol3 integration",
-  "main": "dist/kartkjerne.js",
+  "main": [
+    "dist/noe.js"
+  ],
   "license": "BSD",
   "ignore": [
     "**/.*",
