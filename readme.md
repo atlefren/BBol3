@@ -29,10 +29,11 @@ setupMap sets up a map, based on the mapConfig, in the specified element and the
     - layers: a dict with two keys: 
         - baseLayers: the base layers (Array)
         - overlays: the overlays (Array)
-    - the induvidual layers in the arrays are dicts with the attributes from the config and a            ollayer attribute, which is the OpenLayers layer object.
+    - the induvidual layers in the arrays are dicts with the attributes from the config and a ollayer attribute, which is the OpenLayers layer object.
 
 
-    cp.hideLayer(layerDict);
+
+     cp.hideLayer(layerDict);
 
 This hides a layer, expects a dict in the same form as those returned by initMap. Should only be used for overlays
 
