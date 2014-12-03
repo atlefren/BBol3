@@ -60,9 +60,9 @@ The config defines the properties on the map. A lot of properties have defaults,
         "layers": [] // a list of layer dicts (see below)
     }
     
-    The layers have some common attributes, and some that depends on their source.
+The layers have some common attributes, and some that depends on their source.
     
-    The common ones are:
+The common ones are:
     
         {
             "isBaseLayer": bool, // can be omitted, defaults to false
