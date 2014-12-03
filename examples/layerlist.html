@@ -31,10 +31,7 @@
 
 
 <script type="text/javascript" src="../dist/ol3core.js"></script>
-<script type="text/javascript" src="../dist/ol3listmap.js"></script>
-<script type="text/javascript" src="../dist/ol3selectevents.js"></script>
-<script type="text/javascript" src="../dist/ol3markers.js"></script>
-
+<script type="text/javascript" src="../dist/initbbmap.js"></script>
 
 <script type="text/javascript">
 (function () {
@@ -106,7 +103,7 @@
         },
 
         change: function () {
-            this.model.collection.trigger('selectLayer', this.model);
+            this.model.set('visible', true);
         }
     });
 
@@ -129,11 +126,7 @@
         },
 
         change: function () {
-            if (this.$('input').prop('checked')) {
-                this.model.collection.trigger('selectLayer', this.model);
-            } else {
-                this.model.collection.trigger('deselectLayer', this.model);
-            }
+            this.model.set('visible', this.$('input').prop('checked'));
         }
     });
 
@@ -159,29 +152,13 @@
     });
 
     function initPage(mapConfig, mapEl, listEl) {
-
-        var cp = new bbol3.ConfigParser();
-        function mapInit(olmap, layers) {
-            var baseLayers = new Backbone.Collection(layers.baseLayers);
-            var overlays = new Backbone.Collection(layers.overlays);
+        bbol3.initBBMap(mapConfig, mapEl, function (baseLayers, overlays) {
             var el = $('#' + listEl);
-            baseLayers.on('selectLayer', function (layerModel) {
-                cp.setBaseLayer(layerModel.attributes);
-            });
-            overlays.on('selectLayer', function (layerModel) {
-                cp.addOverlay(layerModel.attributes);
-            });
-            overlays.on('deselectLayer', function (layerModel) {
-                cp.hideLayer(layerModel.attributes);
-            });
             el.append('<h3>Base layers</h3>');
             el.append(new BaseLayersView({collection: baseLayers}).render().$el);
             el.append('<h3>Overlays</h3>');
             el.append(new OverlayLayersView({collection: overlays}).render().$el);
-        }
-
-        cp.setupMap(mapConfig, document.getElementById(mapEl), mapInit);
-
+        });
     }
     initPage(mapConfig, 'map', 'left');
 
