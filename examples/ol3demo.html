@@ -3,26 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style type="text/css">
-        #left {
-            float: left;
-            width: 300px;
-        }
-        #map {
-
-            height: 500px;
-            width: 500px;
-            float: left;
-            border: 1px solid black;
-        }
-
-    </style>
+    <link rel="stylesheet" type="text/css" href="../lib/bootstrap/dist/css/bootstrap.css">    
     <link rel="stylesheet" type="text/css" href="../lib/ol3/ol.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
 
-<div id="left">
-    <ul id="havner"></ul>
+<div id="sidebar">
+    <h3>Markers</h3>
+    <ul class="list-group" id="havner"></ul>
 </div>
 <div id="map"></div>
 
@@ -45,6 +34,8 @@
     'use strict';
 
     var mapConfig = {
+        "zoom": 3,
+        "center": [1097161, 7301502],
         "layers": [
             {
                 "isBaseLayer": true,                
@@ -59,6 +50,8 @@
 
         tagName: 'li',
 
+        className: 'list-group-item',
+
         events: _.extend({
 
         }, bbol3.ListMapView.prototype.events),
@@ -68,32 +61,28 @@
         },
 
         render: function () {
-            if (this.selected) {
-                this.$el.html('<strong>' + this.model.get('navn') + '</strong>');
-            } else {
-                this.$el.html(this.model.get('navn'));
-            }
+            this.$el.html(this.model.get('navn'));
             return this;
         },
 
         select: function () {
             bbol3.ListMapView.prototype.select.apply(this, arguments);
-            this.render();
+            this.$el.addClass('active');
         },
 
         deselect: function () {
             bbol3.ListMapView.prototype.deselect.apply(this, arguments);
-            this.render();
+            this.$el.removeClass('active');
         },
 
         highlight: function () {
             bbol3.ListMapView.prototype.highlight.apply(this, arguments);
-            this.$el.css('background', 'red');
+            this.$el.addClass('hovered');
         },
 
         unhighlight: function () {
             bbol3.ListMapView.prototype.unhighlight.apply(this, arguments);
-            this.$el.css('background', '');
+            this.$el.removeClass('hovered');
         }
     });
 

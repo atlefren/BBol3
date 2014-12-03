@@ -23,5 +23,8 @@
   "dependencies": {
     "jquery": "~2.1.1",
     "backbone": "~1.1.2"
+  },
+  "devDependencies": {
+    "bootstrap": "~3.3.1"
   }
 }
