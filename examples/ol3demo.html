@@ -21,8 +21,6 @@
 </head>
 <body>
 
-<h1>Kartkjerne</h1>
-
 <div id="left">
     <ul id="havner"></ul>
 </div>
@@ -52,13 +50,7 @@
                 "isBaseLayer": true,                
                 "source": "WMTS",
                 "url": "http://opencache.statkart.no/gatekeeper/gk/gk.open_wmts?",
-                "layername": "havbunn_grunnkart"
-            }   ,
-            {
-                "isBaseLayer": false,                
-                "source": "WMS",
-                "url": "http://wms.geonorge.no/skwms1/wms.nmg?",
-                "layername": "Grunnlinje",
+                "layername": "norges_grunnkart"
             }
         ]
     };
@@ -108,34 +100,38 @@
 
     function initPage(data, mapConfig, mapEl, listEl) {
         var markers = new bbol3.Markers('../img/markers');
-        var normalStyle = markers.createMarkerStyle('green', 'md');
-        var hlStyle = markers.createMarkerStyle('red', 'md', 1000);
+        
+        //create styles
+        var normalStyle = markers.createMarkerStyle('grey', 'sm');
+        var hlStyle = markers.createMarkerStyle('sky', 'sm', 1000);
+        var selectStyle = markers.createMarkerStyle('sky', 'md', 1000);
+
         var harbours = new bbol3.FeatureCollection(
             data,
             {
                 featureStyle: normalStyle,
-                selectStyle: hlStyle
+                hoverStyle: hlStyle
             }
         );
 
         function mapInit(olmap, layers) {
             var vector = harbours.getLayer()
-            //legg til kartet
+            //add to map
             olmap.addLayer(vector);
             //registrer events
             bbol3.SelectEvents.registerHoverEvents(olmap, vector);
-            bbol3.SelectEvents.registerClickEvents(olmap, vector);
+            bbol3.SelectEvents.registerClickEvents(olmap, vector, selectStyle);
         }
 
         var cp = new bbol3.ConfigParser();
         cp.setupMap(mapConfig, document.getElementById(mapEl), mapInit);
 
-         //lag liste-elementer
+         //create list elements
         var elements = harbours.map(function (havn) {
             return new HarbourView({model: havn}).render().$el;
         });
 
-        //populer liste
+        //populate list
         $('#' + listEl).append(elements);
 
     }

@@ -182,14 +182,21 @@ See ol3demo.html for example use
 #### BBol3.Markers
 Sets up a marker style (based on provided markers) with an optional zIndex.
 
-Usage:
-
-    var markerCreator = new bbol3.Markers('/path/to/markers/folder');
+##### Usage:
+    
+    var markerCreator = new bbol3.MapCore.Markers('/path/to/markers/folder');
     var myMarker = markerCreator.createMarkerStyle('red', 'md'); //creates a medium red marker
     var myMarker = markerCreator.createMarkerStyle('green', 'sm', 1000); //creates a large green marker with z-index 1000
 
-Use the createMarkerStyleDict in the same fasihon to get a POJO (ie not wrapped i ol.styleStyle).
+Use the createMarkerStyleDict in the same fashion to get a POJO (ie not wrapped i ol.styleStyle).
 This is useful for creating more complicated rules and such.
+
+For available colors, see the COLORS array. For available markers, see the img/markers folder
+
+There are three sizes:
+- sm (small)  (23x28 px)
+- md (medium) (33x40 px)
+- lg (large)  (44x56 px)
 
 
 Running tests

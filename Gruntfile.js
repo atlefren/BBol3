@@ -22,13 +22,13 @@ module.exports = function (grunt) {
       },
       ol3markers: {
         src: [
-          'src/Ol3Markers.js'
+          'src/Markers.js'
         ],
         dest: 'dist/ol3markers.js'
       },
       ol3selectevents: {
         src: [
-          'src/Ol3SelectEvents.js'
+          'src/SelectEvents.js'
         ],
         dest: 'dist/ol3selectevents.js'
       },
@@ -79,8 +79,8 @@ module.exports = function (grunt) {
     },
     clean: {
       build: {
-       src: ['dist/']
-     }
+        src: ['dist/']
+      }
     },
     build: {
       tasks: ['clean:build', 'default'],
@@ -89,7 +89,7 @@ module.exports = function (grunt) {
     sync: {
       options: {
         include: ['name', 'version', 'description', 'main', 'license']
-      } 
+      }
     }
   });
 

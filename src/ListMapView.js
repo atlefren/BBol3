@@ -1,5 +1,29 @@
 /*global Backbone:false */
 
+/*
+    Base Backbone view that can be used to provided map-list interactions as in Havnebase.
+
+    Assumes that the model passed has a feature property (which should be an ol3 vector feature)
+
+    Assumes that the model triggers the following events:
+        over: for mouseover on marker
+        out: for mouseout on marker
+        select: for marker click
+        deselect: for deselect marker
+
+    This view triggers the same events on the models based on DOM-events (can be overridden in events).
+
+    To use this class, subclass it and override the following methods:
+
+        render
+        highlight
+        unhighlight
+        select  (be sure to call super though)
+        deselect (be sure to call super though)
+
+        See ol3demo.html for example use
+*/
+
 var bbol3 = this.bbol3 || {};
 (function (ns) {
     'use strict';
