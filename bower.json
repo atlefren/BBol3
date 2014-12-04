@@ -17,8 +17,7 @@
     "test",
     "src",
     "lib",
-    "Gruntfile.js",
-    "sonar-project.properties"
+    "Gruntfile.js"
   ],
   "dependencies": {
     "jquery": "~2.1.1",
