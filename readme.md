@@ -6,7 +6,7 @@ A lightweight integration between OpenLayers3 and Backbone.js Based on the libra
 Installation
 ------------
 
-    bower install ol3bb
+    bower install bbol3
 
 Or just copy files from the dist folder    
 
