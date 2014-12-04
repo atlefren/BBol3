@@ -3,6 +3,13 @@ BBol3
 A lightweight integration between OpenLayers3 and Backbone.js Based on the library "bwmaplib" from Barentswatch (https://github.com/barentswatch/maplib).
 
 
+Installation
+------------
+
+    bower install ol3bb
+
+Or just copy files from the dist folder    
+
 Components
 ----------
 A run-down of the various components, these are built into separate files, as few of them have any hard dependencies on each other.
